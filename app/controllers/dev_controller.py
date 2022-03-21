@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from flask import jsonify, request
+from app.exceptions.dev_exc import DevIdNotFound
 from app.models.dev_model import Dev
 
 
@@ -39,14 +40,28 @@ def remove_dev(dev_id: str):
 
     if not deleted_dev:
         return {"error": f"id {dev_id} not found"}, HTTPStatus.NOT_FOUND
-    
+
     Dev.serialize_dev(deleted_dev)
 
     return deleted_dev, HTTPStatus.OK
+
 
 def get_by_gmail():
     devs = Dev.filter_by_gmail()
 
     serialize_devs = [Dev.serialize_dev(dev) for dev in devs]
 
-    return jsonify(serialize_devs) , HTTPStatus.OK
+    return jsonify(serialize_devs), HTTPStatus.OK
+
+
+def update_dev(dev_id: str):
+    data = request.get_json()
+
+    try:
+        update_dev_info = Dev.update_dev(dev_id, data)
+    except DevIdNotFound:
+        return {"error": f"dev id {dev_id} not found."}, HTTPStatus.NOT_FOUND
+
+    serialized_dev = Dev.serialize_dev(update_dev_info)
+
+    return serialized_dev, HTTPStatus.OK

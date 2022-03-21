@@ -2,6 +2,9 @@ from typing import Union
 import pymongo
 from bson.objectid import ObjectId
 import re
+from pymongo import ReturnDocument
+
+from app.exceptions.dev_exc import DevIdNotFound
 
 # Database URI/URL
 client = pymongo.MongoClient("mongodb://localhost:27017/")
@@ -11,8 +14,12 @@ db = client["turma8"]
 
 class Dev:
     def __init__(self, **kwargs):
-        self.name = kwargs["name"]
-        self.email = kwargs["email"]
+        #criando o dicionario de forma dinamica para n ficar restrito às chaves name e email
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+        # self.name = kwargs["name"]
+        # self.email = kwargs["email"]
 
     @staticmethod
     def serialize_dev(dev: Union["Dev", dict]):
@@ -44,3 +51,15 @@ class Dev:
 
         devs = db.devs.find({"email": gmail_regex})
         return devs
+
+    @staticmethod
+    def update_dev(dev_id: str, payload: dict):
+        updated_dev_info = db.devs.find_one_and_update(
+            {"_id": ObjectId(dev_id)},
+            {"$set": payload},
+            return_document=ReturnDocument.AFTER,
+        )
+
+        if not updated_dev_info:
+            raise DevIdNotFound
+        return updated_dev_info

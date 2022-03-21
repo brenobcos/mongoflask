@@ -3,6 +3,7 @@ from app.controllers.dev_controller import (
     create_dev,
     remove_dev,
     get_by_gmail,
+    update_dev,
 )
 
 
@@ -22,3 +23,7 @@ def dev_route(app):
     @app.delete("/devs/<dev_id>")
     def delete(dev_id):
         return remove_dev(dev_id)
+
+    @app.patch("/devs/<dev_id>")
+    def update(dev_id):
+        return update_dev(dev_id)
